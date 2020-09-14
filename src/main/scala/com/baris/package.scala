@@ -1,9 +1,6 @@
 package com
-
-import com.baris.Configuration.Config
-import zio.ZIO
-
-import scala.concurrent.Future
+import zio.Has
+import com.baris.interfaces.{Configuration, Persistence}
 
 package object baris {
 
@@ -12,8 +9,13 @@ package object baris {
    * val database: ZIO[Configuration, Throwable, DB] == val database: ZIO[Has[Configuration.Service], Throwable, DB]
    *
    **/
-  type ConfigurationModule = zio.Has[Configuration.Service]
+  type ConfigurationModule = Has[Configuration.Service]
 
-  type FutureToIOModule = zio.Has[FutureToIO.Service[Future,Any]]
+  type UserPersistanceModule = Has[Persistence.Service[User]]
+
+
+  case class User(id: Int)
+
+  case class UserNotFound(id: Int) extends Throwable
 
 }

@@ -21,5 +21,9 @@ libraryDependencies +=  "org.tpolecat" %% "doobie-h2" % "0.9.0"
 // Config
 libraryDependencies += "com.github.pureconfig" %% "pureconfig" % "0.13.0"
 
-
+// Streams
+libraryDependencies ++= Seq(
+  "dev.zio" %% "zio-streams" % "1.0.0",
+  "dev.zio" %% "zio-kafka"   % "0.12.0"
+)
 
