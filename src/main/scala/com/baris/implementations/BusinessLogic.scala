@@ -6,30 +6,45 @@ import zio.{Chunk, ZIO}
 import zio.kafka.consumer.{Consumer, OffsetBatch, Subscription}
 import zio.kafka.producer.Producer
 import zio.kafka.serde.Serde
-import zio._, zio.blocking.Blocking, zio.clock.Clock
+import zio._
+import zio.blocking.Blocking
+import zio.clock.Clock
+import zio.console.Console
+
+import scala.util.{Failure, Success}
 
 
 object BusinessLogic {
 
-   val run:RIO[AppEnvironment with Clock with Blocking, Unit] =
+   val run:RIO[AppEnvironment with Clock with Blocking with Console, Unit] =
        Consumer
          .subscribeAnd(Subscription.topics("zio-input--all"))
-         .plainStream(Serde.string, Serde.string)
+         .plainStream(Serde.string.asTry, Serde.string.asTry)
          .map { record =>
            val key   = record.record.key()
            val value = record.record.value()
 
-           val producerRecord: ProducerRecord[String, String] = new ProducerRecord("zio-output-topic", key, value)
-           (producerRecord, record.offset)
+           (key, value) match {
+             case (Success(key),Success(value)) => {
+               val producerRecord: ProducerRecord[String, String] = new ProducerRecord("zio-output-topic", key, value)
+               (producerRecord, record.offset)
+             }
+             case _ => {
+               val producerRecord: ProducerRecord[String, String] = new ProducerRecord("zio-output-topic", "", "value")
+               (producerRecord, record.offset)
+             }
+           }
+
          }
+         .tap(cr => console.putStrLn(cr._1.value()))
          .mapChunksM { chunk =>
-           val records     = chunk.map(_._1)
+           val records     = chunk.map(_._1).filter(record => record.value() == "")
            val offsetBatch = OffsetBatch(chunk.map(_._2).toSeq)
 
            Producer.produceChunk[Any, String, String](records) *> offsetBatch.commit.as(Chunk(()))
          }
          .runDrain
-         .provideSomeLayer(KafkaConsumerAndProducer.consumerAndProducerLive ++ Clock.live ++ Blocking.live)
+         .provideSomeLayer(KafkaConsumerAndProducer.consumerAndProducerLive ++ Clock.live ++ Blocking.live ++ Console.live)
 
 
 
