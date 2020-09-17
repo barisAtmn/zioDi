@@ -2,16 +2,13 @@ package com.baris.implementations
 
 import com.baris.ConfigurationModule
 import org.apache.kafka.clients.consumer.ConsumerConfig
-import org.apache.kafka.clients.producer.ProducerRecord
-import zio.{Has, ZIO, ZLayer, ZManaged}
+import zio.{ZLayer, ZManaged}
 import zio.blocking.Blocking
 import zio.clock.Clock
-import zio.kafka.consumer.Consumer.AutoOffsetStrategy
-import zio.kafka.consumer.{Consumer, ConsumerSettings, Offset, Subscription}
+import zio.kafka.consumer.{Consumer, ConsumerSettings}
 import zio.kafka.producer.{Producer, ProducerSettings}
 import zio.kafka.serde.Serde
 
-import scala.util.{Failure, Success, Try}
 
 object KafkaConsumerAndProducer {
 

@@ -1,32 +1,17 @@
 package com.baris
 
-import com.baris.implementations.UserPersistenceService._
-import zio.{ExitCode, UIO, URIO, ZIO, ZLayer}
 import com.baris.implementations._
 import zio.blocking._
-import zio.console._
+import zio._
+import zio.clock.Clock
+import zio.console.Console._
 
-object Application extends zio.App {
+object Application extends App {
+  def run(args: List[String]): ZIO[ZEnv, Nothing, ExitCode] = {
+    val program = for {
+      _ <- BusinessLogic.run
+    } yield ()
 
-  def run(args: List[String]):URIO[zio.ZEnv with Console, ExitCode] = {
-    (for {
-      env <- prepareEnvironment
-      out <- myAppLogic.provideCustomLayer(env).foldM(
-        error => putStrLn(s"Execution failed with: $error"),
-        success => putStrLn(success.id.toString)
-      )
-    } yield out).exitCode
+    program.provideLayer(Environments.appEnvironment ++ Clock.live ++ Blocking.live ++ console.Console.live).exitCode
   }
-
-  val myAppLogic:ZIO[UserPersistanceModule, Throwable, User] = {
-    val user = User(1)
-    for {
-      _        <- UserPersistance_createDB
-      created  <- UserPersistance_create(user)
-    } yield created
-  }
-
-  // Put all modules to ZIO context -- DI
-  private val prepareEnvironment:UIO[ZLayer[Any, Throwable, UserPersistanceModule]] = UIO.succeed((Blocking.live ++ ConfigurationService.live) >>> UserPersistenceService.liveH2)
-
 }
