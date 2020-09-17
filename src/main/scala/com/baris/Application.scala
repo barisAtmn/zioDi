@@ -1,7 +1,7 @@
 package com.baris
 
 import com.baris.implementations.UserPersistenceService._
-import zio.{ExitCode, UIO, URIO, ZIO}
+import zio.{ExitCode, UIO, URIO, ZIO, ZLayer}
 import com.baris.implementations._
 import zio.blocking._
 import zio.console._
@@ -27,6 +27,6 @@ object Application extends zio.App {
   }
 
   // Put all modules to ZIO context -- DI
-  private val prepareEnvironment = UIO.succeed((Blocking.live ++ ConfigurationService.live) >>> UserPersistenceService.live)
+  private val prepareEnvironment:UIO[ZLayer[Any, Throwable, UserPersistanceModule]] = UIO.succeed((Blocking.live ++ ConfigurationService.live) >>> UserPersistenceService.liveH2)
 
 }

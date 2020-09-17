@@ -87,7 +87,18 @@ object UserPersistenceService {
       sql"""CREATE TABLE USERS (id int)""".update
   }
 
-  val live: ZLayer[ConfigurationModule with Blocking, Throwable, UserPersistanceModule] =
+  val liveH2: ZLayer[ConfigurationModule with Blocking, Throwable, UserPersistanceModule] =
+    ZLayer.fromManaged (
+      for {
+        config <- getConfig.toManaged_
+        connectEC <- ZIO.descriptor.map(_.executor.asEC).toManaged_
+        blockingEC <- blocking { ZIO.descriptor.map(_.executor.asEC)
+        }.toManaged_
+        managed <- mkTransactor(config, connectEC, blockingEC)
+      } yield managed
+    )
+
+  val livePostgres: ZLayer[ConfigurationModule with Blocking, Throwable, UserPersistanceModule] =
     ZLayer.fromManaged (
       for {
         config <- getConfig.toManaged_

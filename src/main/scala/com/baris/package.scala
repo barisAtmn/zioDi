@@ -1,6 +1,9 @@
 package com
+import com.baris.implementations.{ConfigurationService, KafkaConsumerAndProducer}
 import zio.Has
 import com.baris.interfaces.{Configuration, Persistence}
+import zio.blocking.Blocking
+import zio.clock.Clock
 
 package object baris {
 
